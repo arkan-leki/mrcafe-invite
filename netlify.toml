@@ -1,0 +1,19 @@
+# ڕێکخستنی Netlify — هیچ build پێویست نییە، فۆڵدەرەکە خۆی وەک خۆی بڵاودەکرێتەوە
+[build]
+  publish = "."
+  command = ""
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

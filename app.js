@@ -1112,9 +1112,6 @@
     syncControls();
     wireEvents();
     render();
-
-    // وێنەی دەقی دووەم پێشوەخت لە پاشبنەمدا باربکە (بۆ گۆڕینی خێرا)
-    getBackground(templateUrl("2")).catch(() => {});
   }
 
   init();

@@ -1,0 +1,9 @@
+# بۆ Netlify و Cloudflare Pages (GitHub Pages ئەم فایلە پشتگوێ دەخات)
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=604800
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
