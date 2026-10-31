@@ -1,0 +1,334 @@
+/* ===================================================================
+   دروستکەری بانگهێشتنامەی مستەر کافێ — styles
+   ڕەنگەکان لە وێنەی بانگهێشتنامەکەوە وەرگیراون (قاوەیی + کاغەزی کۆن)
+   =================================================================== */
+
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  src: url("fonts/NotoNaskhArabic-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  src: url("fonts/NotoNaskhArabic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --paper: #efe3d0;
+  --paper-2: #f7efe1;
+  --ink: #33210f;
+  --ink-soft: #6b543c;
+  --coffee: #5c4033;
+  --coffee-dark: #3e2723;
+  --gold: #b08d57;
+  --line: #dcc9ae;
+  --shadow: 0 10px 30px rgba(62, 39, 35, 0.14);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "Noto Naskh Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #fbf5ea 0%, rgba(251, 245, 234, 0) 60%),
+    linear-gradient(180deg, #f2e7d6 0%, #e9dbc6 100%);
+  min-height: 100vh;
+  padding: 24px 16px 56px;
+  line-height: 1.8;
+}
+
+/* ---------- سەردێڕ ---------- */
+.site-header {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  text-align: center;
+}
+
+.site-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  color: var(--coffee-dark);
+  letter-spacing: 0;
+}
+
+.site-header .sub {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+/* ---------- ئاگادارکردنەوەی file:// ---------- */
+.banner {
+  max-width: 1180px;
+  margin: 0 auto 20px;
+  padding: 14px 18px;
+  border: 1px solid #d9a441;
+  border-radius: var(--radius);
+  background: #fff6e2;
+  color: #6b4a10;
+  box-shadow: var(--shadow);
+  font-size: 15px;
+}
+.banner strong { display: block; margin-bottom: 4px; font-size: 16px; }
+.banner p { margin: 6px 0; }
+.banner pre {
+  margin: 6px 0;
+  padding: 8px 12px;
+  background: #fffdf8;
+  border: 1px dashed #d9a441;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.banner code { font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 14px; direction: ltr; unicode-bidi: embed; }
+
+/* ---------- ڕیزبەندی سەرەکی ---------- */
+.layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 880px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ---------- پەنێل ---------- */
+.panel {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  position: sticky;
+  top: 18px;
+}
+
+@media (max-width: 880px) {
+  .panel { position: static; }
+}
+
+.panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--coffee);
+  margin: 4px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.panel-title:not(:first-child) { margin-top: 26px; }
+
+/* ---------- خانەکان ---------- */
+.field { display: block; margin-bottom: 14px; }
+.field > span {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.field.range > span { display: flex; justify-content: space-between; gap: 10px; }
+.field output {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--coffee);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+}
+
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(176, 141, 87, .18);
+}
+
+textarea {
+  resize: vertical;
+  line-height: 1.9;
+  font-size: 15px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--coffee);
+  margin: 2px 0 0;
+}
+
+.field.color {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.field.color > span { margin: 0; }
+input[type="color"] {
+  width: 54px;
+  height: 34px;
+  padding: 2px;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ---------- دوگمەکان ---------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn {
+  flex: 1 1 auto;
+  min-width: 140px;
+  padding: 11px 16px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .06s, background-color .15s, box-shadow .15s;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--coffee);
+  color: #fff8ec;
+  box-shadow: 0 4px 12px rgba(92, 64, 51, .25);
+}
+.btn-primary:hover { background: var(--coffee-dark); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--coffee);
+  border-color: var(--line);
+}
+.btn-ghost:hover { background: #fffdf8; border-color: var(--gold); }
+
+.btn[disabled] {
+  opacity: .55;
+  cursor: progress;
+  transform: none;
+}
+
+/* ---------- وردەکاری ---------- */
+details.advanced {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffaf1;
+  padding: 0 14px 4px;
+  margin: 4px 0 6px;
+}
+details.advanced > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--coffee);
+  padding: 10px 0;
+  list-style: none;
+  user-select: none;
+}
+details.advanced > summary::-webkit-details-marker { display: none; }
+details.advanced > summary::before { content: "▾ "; color: var(--gold); }
+details.advanced:not([open]) > summary::before { content: "▸ "; }
+details.advanced > summary + * { margin-top: 2px; }
+details.advanced > *:last-child { margin-bottom: 10px; }
+
+details.bulk { margin-top: 22px; }
+
+/* ---------- پێشبینین ---------- */
+.preview { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+.canvas-wrap {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+#inviteCanvas {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(86vh, 1100px);
+  border-radius: 6px;
+}
+
+/* ---------- ئامۆژگاری ---------- */
+.hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+.hint.center { text-align: center; }
+
+kbd {
+  font-family: inherit;
+  font-size: 12px;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0 5px;
+}
+
+/* ---------- توست ---------- */
+.toast {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 22px;
+  margin-inline: auto;
+  width: max-content;
+  max-width: min(90vw, 420px);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--coffee-dark);
+  color: #fff8ec;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+  z-index: 50;
+}
+.toast.show { opacity: 1; transform: translateY(0); }

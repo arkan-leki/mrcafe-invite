@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="دروستکەری بانگهێشتنامەی مستەر کافێ — ناوی میوان بخەرە سەر وێنەی بانگهێشتنامەکە و دەقی واتساپیش ئامادە بکە." />
+  <title>دروستکەری بانگهێشتنامەی مستەر کافێ</title>
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%95%3C/text%3E%3C/svg%3E" />
+  <link rel="preload" href="fonts/NotoNaskhArabic-Bold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/NotoNaskhArabic-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>دروستکەری بانگهێشتنامەی مستەر کافێ</h1>
+    <p class="sub">ناوی میوان بنووسە — وێنەی بانگهێشتنامە و دەقی واتساپ بە یەک جار ئامادە دەبن.</p>
+  </header>
+
+  <!-- ئاگادارکردنەوە: تەنها کاتێک پەڕەکە بە file:// کراوەتەوە نیشان دەدرێت -->
+  <div id="fileBanner" class="banner" hidden>
+    <strong>پەڕەکە بە شێوەی فایل کراوەتەوە (<code>file://</code>) — داگرتنی وێنە کار ناکات.</strong>
+    <p>
+      وێبگەڕ ڕێگە نادات وێنە لە فایلێکی ناوخۆییەوە دابگیرێت. ئەم فۆڵدەرە بە سێرڤەرێکی
+      ناوخۆیی بکەرەوە:
+    </p>
+    <pre><code>./start.sh</code></pre>
+    <p>یان بە دەستی:</p>
+    <pre><code>python3 -m http.server 8000</code></pre>
+    <p>پاشان ئەم ناونیشانە بکەرەوە: <code>http://localhost:8000</code></p>
+  </div>
+
+  <main class="layout">
+    <!-- ============ پەنێلی ڕێکخستن ============ -->
+    <section class="panel" aria-label="ڕێکخستنی بانگهێشتنامە">
+      <h2 class="panel-title">١) ناوی میوان</h2>
+
+      <label class="field">
+        <span>ناوی میوان</span>
+        <input id="guestName" type="text" inputmode="text" autocomplete="off"
+               placeholder="بۆ نموونە: ئەحمەد ئەحمەد" />
+      </label>
+
+      <label class="field">
+        <span>دەقی نامە</span>
+        <select id="template">
+          <option value="1">دەقی یەکەم — خۆشحاڵ دەبین بە ئامادەبوونی بەڕێزتان لە مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ.</option>
+          <option value="2">دەقی دووەم — بەڕێزتان بانگێشت کراون بۆ مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ، ئامادەبوونتان مایەی خۆشحاڵیمانە.</option>
+        </select>
+      </label>
+
+      <details class="advanced">
+        <summary>ڕێکخستنی وردی (شوێن و قەبارەی ناو)</summary>
+
+        <label class="field range">
+          <span>قەبارەی فۆنت <output id="fontSizeOut">—</output></span>
+          <input id="fontSize" type="range" min="24" max="130" step="1" />
+        </label>
+
+        <label class="field range">
+          <span>بەرزی (سەر خاڵەکان) <output id="baselineOut">—</output></span>
+          <input id="baseline" type="range" min="0.540" max="0.660" step="0.001" />
+        </label>
+
+        <label class="field range">
+          <span>ناوەندی ئاسۆیی <output id="centerXOut">—</output></span>
+          <input id="centerX" type="range" min="0.320" max="0.600" step="0.001" />
+        </label>
+
+        <label class="field color">
+          <span>ڕەنگی ناو</span>
+          <input id="nameColor" type="color" />
+        </label>
+
+        <button id="resetBtn" type="button" class="btn btn-ghost">گەڕاندنەوە بۆ شێوەی بنەڕەت</button>
+      </details>
+
+      <h2 class="panel-title">٢) دەقی واتساپ</h2>
+      <textarea id="messageOutput" rows="9" readonly placeholder="لێرەدا دەقەکە ئامادە دەبێت…"></textarea>
+
+      <div class="actions">
+        <button id="copyBtn" type="button" class="btn btn-primary">کۆپیکردنی دەق</button>
+        <button id="downloadBtn" type="button" class="btn btn-primary">داگرتنی وێنە</button>
+      </div>
+      <p class="hint">کیبۆرد: <kbd>Ctrl</kbd> + <kbd>Enter</kbd> وێنە دادەگرێت، <kbd>Ctrl</kbd> + <kbd>C</kbd> دەق کۆپی دەکات (کاتێک فۆکس لەسەر نییە).</p>
+
+      <details class="advanced bulk">
+        <summary>چەند ناو بە یەک جار (بۆ ناردنی بە کۆمەڵ)</summary>
+        <p class="hint">هەر ناوێک لە دێرێکی نوێ بنووسە. لە کاتی داگرتن، وێبگەڕەکە لەوانەیە مۆڵەتی «چەند داگرتن» بدات.</p>
+        <textarea id="namesList" rows="6" placeholder="ئەحمەد ئەحمەد&#10;سارا عەلی&#10;کاروان محمد"></textarea>
+        <div class="actions">
+          <button id="downloadAllBtn" type="button" class="btn btn-primary">داگرتنی هەموو وێنەکان</button>
+          <button id="copyAllBtn" type="button" class="btn btn-ghost">کۆپیکردنی هەموو دەقەکان</button>
+        </div>
+        <p class="hint" id="bulkStatus" role="status" aria-live="polite"></p>
+      </details>
+    </section>
+
+    <!-- ============ پێشبینین ============ -->
+    <section class="preview" aria-label="پێشبینینی بانگهێشتنامە">
+      <div class="canvas-wrap">
+        <canvas id="inviteCanvas" aria-label="وێنەی بانگهێشتنامە بە ناوی میوان"></canvas>
+      </div>
+      <p class="hint center">ئەمە تەنها پێشبینینە — وێنەی داگیراوی ١٥٣٦ × ٢٧٥٢ پیکسڵە (بۆ چاپ و واتساپ گونجاوە).</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
