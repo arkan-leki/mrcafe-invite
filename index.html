@@ -42,12 +42,13 @@
       </label>
 
       <label class="field">
-        <span>دەقی نامە</span>
+        <span>دەقی نامە (هەر دەقێک وێنەی خۆی هەیە)</span>
         <select id="template">
           <option value="1">دەقی یەکەم — خۆشحاڵ دەبین بە ئامادەبوونی بەڕێزتان لە مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ.</option>
           <option value="2">دەقی دووەم — بەڕێزتان بانگێشت کراون بۆ مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ، ئامادەبوونتان مایەی خۆشحاڵیمانە.</option>
         </select>
       </label>
+      <p class="hint" style="margin-top:-6px">وێنەی باکگراوند لەگەڵ دەقەکە دەگۆڕدرێت — نامە لەسەر خاڵەکانی هەردوو وێنەکە بە هەمان شێوە دادەنرێت.</p>
 
       <details class="advanced">
         <summary>ڕێکخستنی وردی (شوێن و قەبارەی ناو)</summary>
@@ -85,11 +86,43 @@
       <p class="hint">کیبۆرد: <kbd>Ctrl</kbd> + <kbd>Enter</kbd> وێنە دادەگرێت، <kbd>Ctrl</kbd> + <kbd>C</kbd> دەق کۆپی دەکات (کاتێک فۆکس لەسەر نییە).</p>
 
       <details class="advanced bulk">
-        <summary>چەند ناو بە یەک جار (بۆ ناردنی بە کۆمەڵ)</summary>
-        <p class="hint">هەر ناوێک لە دێرێکی نوێ بنووسە. لە کاتی داگرتن، وێبگەڕەکە لەوانەیە مۆڵەتی «چەند داگرتن» بدات.</p>
+        <summary>چەند ناو بە یەک جار + PDF (A4 / A3)</summary>
+        <p class="hint">هەر ناوێک لە دێرێکی نوێ بنووسە. هەموو بانگهێشتنامەکان لە یەک فایلی PDF دانراون — ئامادەی چاپکردن.</p>
         <textarea id="namesList" rows="6" placeholder="ئەحمەد ئەحمەد&#10;سارا عەلی&#10;کاروان محمد"></textarea>
+
+        <div class="pdf-options">
+          <label class="field">
+            <span>قەبارەی کاغەز</span>
+            <select id="pdfPaper">
+              <option value="a4" selected>A4</option>
+              <option value="a3">A3</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>چەند بانگهێشتنامە لە هەر پەڕەیەک</span>
+            <select id="pdfPerPage">
+              <option value="1" selected>١</option>
+              <option value="2">٢</option>
+              <option value="3">٣</option>
+              <option value="4">٤</option>
+              <option value="6">٦</option>
+            </select>
+          </label>
+        </div>
+
+        <p class="hint" id="paperHint">A4 = ٢١٠ × ٢٩٧ ملم · A3 = ٢٩٧ × ٤٢٠ ملم</p>
+
+        <label class="check-row">
+          <input id="pdfCutLines" type="checkbox" />
+          <span>خەتی بڕین لە دەوری هەر کارتێک</span>
+        </label>
+
         <div class="actions">
-          <button id="downloadAllBtn" type="button" class="btn btn-primary">داگرتنی هەموو وێنەکان</button>
+          <button id="pdfBtn" type="button" class="btn btn-primary">داگرتنی PDF (هەموو ناوەکان)</button>
+        </div>
+        <div class="actions">
+          <button id="downloadAllBtn" type="button" class="btn btn-ghost">داگرتنی وێنەکان بە جیا (JPG)</button>
           <button id="copyAllBtn" type="button" class="btn btn-ghost">کۆپیکردنی هەموو دەقەکان</button>
         </div>
         <p class="hint" id="bulkStatus" role="status" aria-live="polite"></p>

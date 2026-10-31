@@ -39,11 +39,15 @@
   /* دەقەکان — وەک لە کۆدی پێشوودا هەبوو، تەنها ڕێکخراوتر */
   const TEMPLATES = {
     "1": {
+      // وێنەیەک کە دەقی یەکەم لەسەر چاپکراوە
+      image: "new_invite_bg.jpg",
       body:
         "خۆشحاڵ دەبین بە ئامادەبوونی بەڕێزتان لە مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ.\n" +
         "هاتنتان مایەی خۆشحاڵیمانە.",
     },
     "2": {
+      // وێنەیەک کە دەقی دووەم لەسەر چاپکراوە
+      image: "new_invite_bg_2.jpg",
       body:
         "بەڕێزتان بانگێشت کراون بۆ مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ،\n" +
         "ئامادەبوونتان مایەی خۆشحاڵیمانە.",
@@ -77,6 +81,10 @@
     downloadAll: el("downloadAllBtn"),
     copyAll: el("copyAllBtn"),
     bulkStatus: el("bulkStatus"),
+    pdfPaper: el("pdfPaper"),
+    pdfPerPage: el("pdfPerPage"),
+    pdfCutLines: el("pdfCutLines"),
+    pdfBtn: el("pdfBtn"),
     toast: el("toast"),
   };
 
@@ -88,6 +96,9 @@
     centerX: CFG.centerX,
     color: CFG.color,
     template: "1",
+    pdfPaper: "a4",
+    pdfPerPage: 1,
+    pdfCutLines: false,
   };
 
   let bgImage = null;
@@ -159,29 +170,40 @@
     probeCtx.font = font;
     probeCtx.direction = "rtl";
     probeCtx.textAlign = "center";
-    probeCtx.textBaseline = "middle";
+    probeCtx.textBaseline = "alphabetic";
     probeCtx.fillStyle = "#000";
-    probeCtx.fillText(text, w / 2, h / 2);
+    const baseY = h * 0.72; // بنەڕەتی نووسین لە کانواسی پێوانە
+    probeCtx.fillText(text, w / 2, baseY);
 
     const data = probeCtx.getImageData(0, 0, w, h).data;
     let minX = w;
     let maxX = -1;
+    let minY = h;
+    let maxY = -1;
     for (let y = 0; y < h; y++) {
       const row = y * w * 4;
       for (let x = 0; x < w; x++) {
         if (data[row + x * 4 + 3] > 32) {
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
         }
       }
     }
 
-    if (maxX < minX) return { width: advance, dx: 0 }; // هیچ مەرەکەبێک نەدۆزرایەوە
+    if (maxX < minX) {
+      // هیچ مەرەکەبێک نەدۆزرایەوە
+      return { width: advance, dx: 0, top: -px * 0.8, bottom: px * 0.2 };
+    }
 
     return {
       width: maxX - minX + 1,
       // چەند پیکسڵ ناوەکە بجووڵێنین بۆ ئەوەی مەرەکەب ڕاستەوخۆ لە ناوەنددا بێت
       dx: w / 2 - (minX + maxX + 1) / 2,
+      // مەودای ستوونی مەرەکەب بە ڕێژە بۆ بنەڕەتی نووسین (سالب = لە سەرەوە)
+      top: minY - baseY,
+      bottom: maxY + 1 - baseY,
     };
   }
 
@@ -197,6 +219,20 @@
     return { px, ink };
   }
 
+  /* شوێن و قەبارەی ناو لەسەر کارتەکە (پیکسڵ لەسەر کانواسی ١٥٣٦ × ٢٧٥٢) */
+  function computeNameLayout(name) {
+    const { px, ink } = fitFont(state.fontPx, name);
+    return {
+      name,
+      px,
+      ink,
+      font: `bold ${px}px ${CFG.fontFamily}`,
+      anchorX: canvas.width * state.centerX + ink.dx,
+      baselineY: canvas.height * state.baselineY,
+      color: state.color,
+    };
+  }
+
   function draw() {
     if (!ready) return;
 
@@ -208,24 +244,20 @@
     const name = ui.name.value.trim();
     if (!name) return;
 
+    const L = computeNameLayout(name);
+
     ctx.save();
     ctx.direction = "rtl";
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = state.color;
-
-    const { px, ink } = fitFont(state.fontPx, name);
-    ctx.font = `bold ${px}px ${CFG.fontFamily}`;
-
-    const x = canvas.width * state.centerX + ink.dx;
-    const y = canvas.height * state.baselineY;
-    ctx.fillText(name, x, y);
-
+    ctx.fillStyle = L.color;
+    ctx.font = L.font;
+    ctx.fillText(name, L.anchorX, L.baselineY);
     ctx.restore();
 
     // ئاگادارکردنەوە کاتێک فۆنت خۆکارانە بچووک کراوە بۆ ئەوەی لە خاڵەکان تێپەڕ نەکات
     ui.fontSizeOut.textContent =
-      px < state.fontPx ? `${state.fontPx}px → ${px}px` : `${state.fontPx}px`;
+      L.px < state.fontPx ? `${state.fontPx}px → ${L.px}px` : `${state.fontPx}px`;
   }
 
   function render() {
@@ -251,6 +283,9 @@
           baselineY: state.baselineY,
           centerX: state.centerX,
           color: state.color,
+          pdfPaper: state.pdfPaper,
+          pdfPerPage: state.pdfPerPage,
+          pdfCutLines: state.pdfCutLines,
         })
       );
     } catch (e) {
@@ -272,6 +307,9 @@
       if (Number.isFinite(saved.baselineY)) state.baselineY = saved.baselineY;
       if (Number.isFinite(saved.centerX)) state.centerX = saved.centerX;
       if (typeof saved.color === "string") state.color = saved.color;
+      if (PAPERS[saved.pdfPaper]) state.pdfPaper = saved.pdfPaper;
+      if (Number.isFinite(saved.pdfPerPage)) state.pdfPerPage = saved.pdfPerPage;
+      if (typeof saved.pdfCutLines === "boolean") state.pdfCutLines = saved.pdfCutLines;
     } catch (e) {
       /* هیچ */
     }
@@ -310,13 +348,18 @@
     ui.fontSizeOut.textContent = `${state.fontPx}px`;
     ui.baselineOut.textContent = state.baselineY.toFixed(3);
     ui.centerXOut.textContent = state.centerX.toFixed(3);
+
+    ui.pdfPaper.value = state.pdfPaper;
+    ui.pdfPerPage.value = String(state.pdfPerPage);
+    ui.pdfCutLines.checked = state.pdfCutLines;
   }
 
   function wireEvents() {
     ui.name.addEventListener("input", render);
     ui.template.addEventListener("change", () => {
       state.template = ui.template.value;
-      render();
+      // هەر دەقێک وێنەی خۆی هەیە — پێش کێشان وێنەکە دەگۆڕدرێت
+      applyTemplateImage(state.template).then(render);
     });
 
     ui.fontSize.addEventListener("input", () => {
@@ -338,6 +381,20 @@
       state.color = ui.color.value;
       render();
     });
+
+    ui.pdfPaper.addEventListener("change", () => {
+      state.pdfPaper = ui.pdfPaper.value;
+      saveState();
+    });
+    ui.pdfPerPage.addEventListener("change", () => {
+      state.pdfPerPage = parseInt(ui.pdfPerPage.value, 10) || 1;
+      saveState();
+    });
+    ui.pdfCutLines.addEventListener("change", () => {
+      state.pdfCutLines = ui.pdfCutLines.checked;
+      saveState();
+    });
+    ui.pdfBtn.addEventListener("click", downloadPdf);
 
     ui.reset.addEventListener("click", () => {
       state.fontPx = Math.round(CFG.fontRatio * canvas.width);
@@ -524,7 +581,438 @@
     toast(`${names.length} وێنە داگیرا ✓`);
   }
 
+  /* ================= ٩.٥) دروستکردنی PDF (A4 / A3) =================
+   *
+   * بێ هیچ کتێبخانەیەک: PDF ـێکی ساکار خۆمان دروست دەکەین.
+   *   • باکگراوندی کارت تەنها **یەک جار** وەک JPEG لە PDF دا دانرێت
+   *     (DCTDecode) و لە هەموو پەڕەکان دووبارە بەکارهێنرێت.
+   *   • ناوی هەر میوانێک وەک وێنەیەکی بچووکی شەفاف دانرێت:
+   *     RGB ـێکی یەکڕەنگ + SMask (alpha) کە بە FlateDecode چڕ دەکرێتەوە.
+   *   بەم شێوەیە ١٠٠ ناو لە چەند سەد کیلۆبایتێکدا دەمێنێتەوە، نەک ١٠٠ مێگابایت.
+   * ================================================================ */
+
+  const PAPERS = {
+    a4: { label: "A4", w: 595.276, h: 841.89 }, // 210 × 297 mm
+    a3: { label: "A3", w: 841.89, h: 1190.551 }, // 297 × 420 mm
+  };
+
+  const CARD_ASPECT = 2752 / 1536; // بەرزی / پانی کارت
+
+  /* باشترین ڕیزبەندیی کارتەکان لەسەر لاپەڕە (خۆکار: وێنەیی یان ئەستوونی) */
+  function planLayout(count, paperKey, perPage) {
+    const paper = PAPERS[paperKey] || PAPERS.a4;
+    const margin = 16; // پۆینت (~٥.٦ ملم)
+    const gap = 10;
+
+    let best = null;
+    for (const orient of [
+      { w: paper.w, h: paper.h, name: "portrait" },
+      { w: paper.h, h: paper.w, name: "landscape" },
+    ]) {
+      for (let cols = 1; cols <= perPage; cols++) {
+        const rows = Math.ceil(perPage / cols);
+        if (cols * rows < perPage) continue;
+
+        const availW = orient.w - margin * 2 - gap * (cols - 1);
+        const availH = orient.h - margin * 2 - gap * (rows - 1);
+        if (availW <= 0 || availH <= 0) continue;
+
+        const cardW = Math.min(availW / cols, availH / rows / CARD_ASPECT);
+        if (cardW <= 0) continue;
+        if (!best || cardW > best.cardW) {
+          best = {
+            pageW: orient.w,
+            pageH: orient.h,
+            orientation: orient.name,
+            cols,
+            rows,
+            cardW,
+            cardH: cardW * CARD_ASPECT,
+            gap,
+          };
+        }
+      }
+    }
+
+    const gridW = best.cols * best.cardW + best.gap * (best.cols - 1);
+    const gridH = best.rows * best.cardH + best.gap * (best.rows - 1);
+    const startX = (best.pageW - gridW) / 2;
+    const startY = (best.pageH - gridH) / 2;
+
+    best.cells = [];
+    for (let i = 0; i < perPage; i++) {
+      const row = Math.floor(i / best.cols);
+      const col = i % best.cols;
+      best.cells.push({
+        // ڕیزکردن لە ڕاستەوە بۆ چەپ (RTL)
+        x: startX + (best.cols - 1 - col) * (best.cardW + best.gap),
+        y: best.pageH - startY - best.cardH - row * (best.cardH + best.gap),
+        w: best.cardW,
+        h: best.cardH,
+      });
+    }
+
+    best.pageCount = Math.ceil(count / perPage);
+    best.perPage = perPage;
+    return best;
+  }
+
+  /* چڕکردنەوە بە zlib (هەمان شتێک کە PDF بۆ /FlateDecode پێویستی پێیەتی) */
+  async function deflateBytes(bytes) {
+    if (typeof CompressionStream === "undefined") return null;
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate"));
+    const buf = await new Response(stream).arrayBuffer();
+    return new Uint8Array(buf);
+  }
+
+  /* ناوی میوان وەک کانواسێکی شەفاف + شوێنی لەسەر کارتەکە */
+  function renderNameOverlay(L) {
+    const pad = 2;
+    const w = Math.max(2, Math.ceil(L.ink.width) + pad * 2);
+    const h = Math.max(2, Math.ceil(L.ink.bottom - L.ink.top) + pad * 2);
+
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.direction = "rtl";
+    g.textAlign = "center";
+    g.textBaseline = "alphabetic";
+    g.font = L.font;
+    g.fillStyle = L.color;
+    g.fillText(L.name, w / 2 + L.ink.dx, pad - L.ink.top);
+
+    return {
+      canvas: c,
+      w,
+      h,
+      ox: Math.round(L.anchorX - w / 2), // شوێن لەسەر کارت (پیکسڵ، سەرەوە-چەپ)
+      oy: Math.round(L.baselineY + L.ink.top - pad),
+      color: L.color,
+    };
+  }
+
+  function hexToRgb(hex) {
+    const h = (hex || "#000000").replace("#", "");
+    const full = h.length === 3 ? h.split("").map((x) => x + x).join("") : h;
+    const n = parseInt(full, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  /* وێنەی شەفافی ناو → {rgb, alpha} ی خاو */
+  function overlayToRgba(overlay) {
+    const { w, h } = overlay;
+    const src = overlay.canvas.getContext("2d").getImageData(0, 0, w, h).data;
+    const [r, g, b] = hexToRgb(overlay.color);
+    const alpha = new Uint8Array(w * h);
+    const rgb = new Uint8Array(w * h * 3);
+    for (let i = 0, p = 0; i < w * h; i++, p += 4) {
+      alpha[i] = src[p + 3];
+      rgb[i * 3] = r;
+      rgb[i * 3 + 1] = g;
+      rgb[i * 3 + 2] = b;
+    }
+    return { rgb, alpha };
+  }
+
+  /* ===================== نووسەری PDF ===================== */
+
+  const fmtPt = (n) => (Math.round(n * 1000) / 1000).toString();
+
+  /*
+   * pages:  [{ w, h, content }]        — content = زنجیرەی ئۆپەرەیشنەکان
+   * images: [{ key, w, h, cs, filter, data, mask? }]
+   */
+  function assemblePdf(pages, images) {
+    const chunks = [];
+    let size = 0;
+    const enc = new TextEncoder();
+
+    const push = (data) => {
+      const u8 = typeof data === "string" ? enc.encode(data) : data;
+      chunks.push(u8);
+      size += u8.length;
+    };
+
+    // ژمارەدان بە ئۆبژێکتەکان
+    let next = 3;
+    const imgNum = {};
+    for (const im of images) {
+      imgNum[im.key] = { img: next++, mask: im.mask ? next++ : 0 };
+    }
+    const pageNum = [];
+    const contentNum = [];
+    for (let i = 0; i < pages.length; i++) {
+      pageNum.push(next++);
+      contentNum.push(next++);
+    }
+    const offsets = [];
+
+    push("%PDF-1.7\n");
+    push(new Uint8Array([0x25, 0xe2, 0xe3, 0xcf, 0xd3, 0x0a])); // بایتە باینەرییەکان
+
+    const begin = (num) => {
+      offsets[num] = size;
+      push(`${num} 0 obj\n`);
+    };
+    const end = () => push("endobj\n");
+
+    // ١) کاتالۆگ
+    begin(1);
+    push("<< /Type /Catalog /Pages 2 0 R >>\n");
+    end();
+
+    // ٢) لیستی پەڕەکان
+    begin(2);
+    push(
+      `<< /Type /Pages /Count ${pages.length} /Kids [${pageNum
+        .map((p) => `${p} 0 R`)
+        .join(" ")}] >>\n`
+    );
+    end();
+
+    // ٣) وێنەکان
+    for (const im of images) {
+      const nums = imgNum[im.key];
+      const filterClause = im.filter ? ` /Filter /${im.filter}` : "";
+
+      begin(nums.img);
+      push(
+        `<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} ` +
+          `/ColorSpace /${im.cs} /BitsPerComponent 8${filterClause} ` +
+          `/Length ${im.data.length}` +
+          (im.mask ? ` /SMask ${nums.mask} 0 R` : "") +
+          " >>\nstream\n"
+      );
+      push(im.data);
+      push("\nendstream\n");
+      end();
+
+      if (im.mask) {
+        const mf = im.mask.filter ? ` /Filter /${im.mask.filter}` : "";
+        begin(nums.mask);
+        push(
+          `<< /Type /XObject /Subtype /Image /Width ${im.mask.w} /Height ${im.mask.h} ` +
+            `/ColorSpace /DeviceGray /BitsPerComponent 8${mf} /Length ${im.mask.data.length} >>\nstream\n`
+        );
+        push(im.mask.data);
+        push("\nendstream\n");
+        end();
+      }
+    }
+
+    // ٤) پەڕەکان + ناوەڕۆک
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const refs = [];
+      for (const key of new Set(page.xobjects)) {
+        refs.push(`/${key} ${imgNum[key].img} 0 R`);
+      }
+
+      begin(pageNum[i]);
+      push(
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${fmtPt(page.w)} ${fmtPt(page.h)}] ` +
+          `/Resources << /XObject << ${refs.join(" ")} >> /ProcSet [/PDF /ImageC] >> ` +
+          `/Contents ${contentNum[i]} 0 R >>\n`
+      );
+      end();
+
+      const stream = enc.encode(page.content);
+      begin(contentNum[i]);
+      push(`<< /Length ${stream.length} >>\nstream\n`);
+      push(stream);
+      push("\nendstream\n");
+      end();
+    }
+
+    // ٥) xref + ترەیلەر
+    const xrefOffset = size;
+    const total = next; // ژمارەی ئۆبژێکتەکان + ١
+    push(`xref\n0 ${total}\n`);
+    push("0000000000 65535 f \n");
+    for (let i = 1; i < total; i++) {
+      push(`${String(offsets[i] || 0).padStart(10, "0")} 00000 n \n`);
+    }
+    push(
+      `trailer\n<< /Size ${total} /Root 1 0 R /Producer (MrCafe Invitation Maker) >>\n` +
+        `startxref\n${xrefOffset}\n%%EOF\n`
+    );
+
+    const out = new Uint8Array(size);
+    let at = 0;
+    for (const c of chunks) {
+      out.set(c, at);
+      at += c.length;
+    }
+    return out;
+  }
+
+  /* باکگراوندی کارت وەک JPEG */
+  function backgroundJpeg() {
+    return new Promise((resolve) => {
+      const c = document.createElement("canvas");
+      c.width = canvas.width;
+      c.height = canvas.height;
+      c.getContext("2d").drawImage(bgImage, 0, 0, c.width, c.height);
+      c.toBlob(
+        async (blob) => resolve(blob ? new Uint8Array(await blob.arrayBuffer()) : null),
+        "image/jpeg",
+        CFG.jpegQuality
+      );
+    });
+  }
+
+  /* ===================== داگرتنی PDF ===================== */
+
+  async function downloadPdf() {
+    const names = readNames();
+    if (!names.length) {
+      toast("لانیکەم یەک ناو بنووسە لە لیستی ناوان");
+      ui.namesList.focus();
+      return;
+    }
+
+    const paperKey = ui.pdfPaper.value;
+    const cutLines = ui.pdfCutLines.checked;
+    // ئەگەر ناوەکان کەمتر بن لە ژمارەی دیاریکراو، خانەکان بەتاڵ ناهێڵرێن
+    const perPage = Math.max(
+      1,
+      Math.min(parseInt(ui.pdfPerPage.value, 10) || 1, names.length)
+    );
+
+    ui.pdfBtn.disabled = true;
+    const setStatus = (t) => {
+      ui.bulkStatus.textContent = t;
+    };
+    const tick = () => new Promise((r) => setTimeout(r, 16));
+
+    try {
+      setStatus("ئامادەکردنی باکگراوند…");
+      await tick();
+
+      const bgJpeg = await backgroundJpeg();
+      if (!bgJpeg) throw new Error("باکگراوند نەدەرکرا");
+
+      const images = [
+        {
+          key: "Bg",
+          w: canvas.width,
+          h: canvas.height,
+          cs: "DeviceRGB",
+          filter: "DCTDecode",
+          data: bgJpeg,
+        },
+      ];
+
+      // ناوی هەر میوانێک → وێنەیەکی شەفاف
+      const overlays = [];
+      for (let i = 0; i < names.length; i++) {
+        setStatus(`ئامادەکردنی ناو ${i + 1} / ${names.length}`);
+        await tick();
+
+        const L = computeNameLayout(names[i]);
+        const overlay = renderNameOverlay(L);
+        const { rgb, alpha } = overlayToRgba(overlay);
+
+        const defRgb = await deflateBytes(rgb);
+        const defAlpha = await deflateBytes(alpha);
+
+        images.push({
+          key: `N${i}`,
+          w: overlay.w,
+          h: overlay.h,
+          cs: "DeviceRGB",
+          filter: defRgb ? "FlateDecode" : null,
+          data: defRgb || rgb,
+          mask: {
+            w: overlay.w,
+            h: overlay.h,
+            filter: defAlpha ? "FlateDecode" : null,
+            data: defAlpha || alpha,
+          },
+        });
+
+        overlays.push({ ox: overlay.ox, oy: overlay.oy, w: overlay.w, h: overlay.h });
+        // کانواسەکە ئازاد بکە
+        overlay.canvas.width = overlay.canvas.height = 0;
+      }
+
+      setStatus("ڕیزکردنی لاپەڕەکان…");
+      await tick();
+
+      const plan = planLayout(names.length, paperKey, perPage);
+      const pages = [];
+
+      for (let p = 0; p < plan.pageCount; p++) {
+        let ops = "";
+        const used = [];
+
+        for (let c = 0; c < perPage; c++) {
+          const idx = p * perPage + c;
+          if (idx >= names.length) break;
+
+          const cell = plan.cells[c];
+          const ov = overlays[idx];
+
+          // باکگراوند کارت
+          ops +=
+            `q\n${fmtPt(cell.w)} 0 0 ${fmtPt(cell.h)} ${fmtPt(cell.x)} ${fmtPt(cell.y)} cm\n` +
+            "/Bg Do\nQ\n";
+
+          // ناو — بە پۆینت لەسەر لاپەڕە (وردیی ٠.٠٠١ پۆینت)
+          const scale = cell.w / canvas.width;
+          const nx = cell.x + ov.ox * scale;
+          const ny = cell.y + (canvas.height - ov.oy - ov.h) * scale;
+          ops +=
+            `q\n${fmtPt(ov.w * scale)} 0 0 ${fmtPt(ov.h * scale)} ` +
+            `${fmtPt(nx)} ${fmtPt(ny)} cm\n/N${idx} Do\nQ\n`;
+
+          // خەتی بڕین
+          if (cutLines) {
+            ops +=
+              `q 0.4 w 0.5 G ${fmtPt(cell.x)} ${fmtPt(cell.y)} ` +
+              `${fmtPt(cell.w)} ${fmtPt(cell.h)} re S Q\n`;
+          }
+
+          used.push(`Bg`, `N${idx}`);
+        }
+
+        pages.push({
+          w: plan.pageW,
+          h: plan.pageH,
+          content: ops,
+          xobjects: used,
+        });
+      }
+
+      setStatus("نووسینی فایل…");
+      await tick();
+
+      const bytes = assemblePdf(pages, images);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      triggerDownload(
+        blob,
+        `MrCafe_Invitations_${PAPERS[paperKey].label}_${names.length}names.pdf`
+      );
+
+      const grid = `${plan.cols}×${plan.rows}`;
+      const orientation = plan.orientation === "landscape" ? "پانی" : "بەرزی";
+      ui.bulkStatus.textContent =
+        `${names.length} ناو · ${PAPERS[paperKey].label} (${orientation}) · ` +
+        `${perPage} لە پەڕەیەک (${grid}) · ${plan.pageCount} پەڕە · ` +
+        `${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+      toast("PDF ئامادە بوو ✓");
+    } catch (err) {
+      console.error("[pdf]", err);
+      ui.bulkStatus.textContent = "دروستکردنی PDF سەرکەوتوو نەبوو: " + (err && err.message);
+      toast("دروستکردنی PDF سەرکەوتوو نەبوو");
+    } finally {
+      ui.pdfBtn.disabled = false;
+    }
+  }
+
   /* ================= ١٠) دەستپێکردن ================= */
+
 
   async function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -533,6 +1021,45 @@
       img.onerror = () => reject(new Error(`نەتوانرا وێنە باربکرێت: ${src}`));
       img.src = src;
     });
+  }
+
+  /* وێنەکانی باکگراوند — هەر دەقێک وێنەی خۆی هەیە (لە بیرگە دەمێننەوە) */
+  const bgCache = new Map();
+
+  function templateUrl(templateId) {
+    const t = TEMPLATES[templateId];
+    return (t && t.image) || CFG.imageSrc;
+  }
+
+  async function getBackground(src) {
+    if (bgCache.has(src)) return bgCache.get(src);
+    const img = await loadImage(src);
+    bgCache.set(src, img);
+    return img;
+  }
+
+  /* گۆڕینی وێنەی باکگراوند بەپێی دەقە هەڵبژێردراوەکە */
+  async function applyTemplateImage(templateId) {
+    const src = templateUrl(templateId);
+    let img;
+    try {
+      img = await getBackground(src);
+    } catch (err) {
+      // ئەگەر وێنەی دەقی دووەم نەبوو، بە وێنەی یەکەم بەردەوام بە
+      console.error("[bg]", err);
+      toast(`${src} نەدۆزرایەوە — وێنەی بنەڕەت بەکاردێت`);
+      img = await getBackground(CFG.imageSrc);
+    }
+    bgImage = img;
+
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    ready = true;
+    draw();
   }
 
   async function waitForFonts() {
@@ -555,8 +1082,10 @@
     // بە file:// وێبگەڕ ڕێگە بە دەرکردنی وێنە لە کانواس نادات — پێشوەخت ئاگاداری بکە
     if (location.protocol === "file:") showFileBanner();
 
+    const src = templateUrl(state.template);
+
     try {
-      bgImage = await loadImage(CFG.imageSrc);
+      bgImage = await getBackground(src);
     } catch (err) {
       canvas.width = 1536;
       canvas.height = 2752;
@@ -567,10 +1096,10 @@
       ctx.textAlign = "center";
       ctx.fillText("وێنەی باکگراوند نەدۆزرایەوە:", canvas.width / 2, canvas.height / 2 - 60);
       ctx.font = `bold 40px ${CFG.fontFamily}`;
-      ctx.fillText(CFG.imageSrc, canvas.width / 2, canvas.height / 2 + 20);
+      ctx.fillText(src, canvas.width / 2, canvas.height / 2 + 20);
       ctx.font = `400 32px ${CFG.fontFamily}`;
       ctx.fillText("فایلەکە لە تەنیشت index.html دابنێ", canvas.width / 2, canvas.height / 2 + 90);
-      toast("new_invite_bg.jpg نەدۆزرایەوە");
+      toast(`${src} نەدۆزرایەوە`);
       return;
     }
 
@@ -583,6 +1112,9 @@
     syncControls();
     wireEvents();
     render();
+
+    // وێنەی دەقی دووەم پێشوەخت لە پاشبنەمدا باربکە (بۆ گۆڕینی خێرا)
+    getBackground(templateUrl("2")).catch(() => {});
   }
 
   init();
