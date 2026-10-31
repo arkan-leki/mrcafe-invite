@@ -5,7 +5,9 @@
 و **دەقی واتساپ**یش بۆ هەمان ناو ئامادە دەکات. دواتر بە یەک کلیک وێنەکە دادەگرێت و
 دەقەکە کۆپی دەکات.
 
-![نموونە](new_invite_bg.jpg)
+| پەڕەی دروستکەر | نموونەی بانگهێشتنامەی داگیراو |
+| --- | --- |
+| ![پەڕە](docs/screenshot.jpg) | ![نموونە](docs/sample-invite.jpg) |
 
 ---
 
@@ -102,6 +104,7 @@ mrcafe-invite/
 │   ├── NotoNaskhArabic-Bold.woff2
 │   └── NotoNaskhArabic-Regular.woff2
 ├── start.sh                       # سێرڤەری ناوخۆیی + کردنەوەی وێبگەڕ
+├── docs/                          # وێنەی پێشبینین و نموونە
 └── README.md
 ```
 
