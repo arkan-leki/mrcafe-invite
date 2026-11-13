@@ -48,6 +48,8 @@
     "2": {
       // وێنەیەک کە دەقی دووەم لەسەر چاپکراوە
       image: "new_invite_bg_2.jpg",
+      // خاڵەکانی «بەڕێز» لەم وێنەیەدا ١٩px نزمترن (y ≈ ١٦٥٠ لەجیاتی ١٦٣١)
+      baselineOffset: 19 / 2752,
       body:
         "بەڕێزتان بانگێشت کراون بۆ مەراسیمی کردنەوەی لقی (دوو)ی مستەر کافێ،\n" +
         "ئامادەبوونتان مایەی خۆشحاڵیمانە.",
@@ -228,7 +230,7 @@
       ink,
       font: `bold ${px}px ${CFG.fontFamily}`,
       anchorX: canvas.width * state.centerX + ink.dx,
-      baselineY: canvas.height * state.baselineY,
+      baselineY: canvas.height * (state.baselineY + ((TEMPLATES[state.template] || {}).baselineOffset || 0)),
       color: state.color,
     };
   }
